@@ -21,6 +21,20 @@ export default function CourseRoutes(app, db) {
         res.json(courses);
     };
 
+    const findCoursesCreatedByUser = async (req, res) => {
+        let { userId } = req.params;
+        if (userId === "current") {
+            const currentUser = req.session["currentUser"];
+            if (!currentUser) {
+                res.sendStatus(401);
+                return;
+            }
+            userId = currentUser._id;
+        }
+        const courses = await dao.findCoursesByCreator(userId);
+        res.json(courses);
+    };
+
 
     const enrollmentsDao = EnrollmentsDao(db);
     const createCourse = async (req, res) => {
@@ -31,7 +45,10 @@ export default function CourseRoutes(app, db) {
 
             if (!currentUser) return res.sendStatus(401);
 
-            const newCourse = await dao.createCourse(req.body);
+            const newCourse = await dao.createCourse({
+                ...req.body,
+                createdBy: currentUser._id
+            });
             console.log("Created course:", newCourse);
 
             await enrollmentsDao.enrollUserInCourse(currentUser._id, newCourse._id);
@@ -42,15 +59,56 @@ export default function CourseRoutes(app, db) {
         }
     };
     const deleteCourse = async (req, res) => {
-        const {courseId} = req.params;
-        const status = await dao.deleteCourse(courseId);
-        res.send(status);
+        try {
+            const {courseId} = req.params;
+            const currentUser = req.session["currentUser"];
+            if (!currentUser) {
+                res.sendStatus(401);
+                return;
+            }
+            const course = await dao.findCourseById(courseId);
+            if (!course) {
+                res.status(404).json({message: "Course not found"});
+                return;
+            }
+            // Only creator can delete
+            if (course.createdBy !== currentUser._id && currentUser.role !== "ADMIN") {
+                res.status(403).json({message: "Only the course creator can delete this course"});
+                return;
+            }
+            await enrollmentsDao.unenrollAllUsersFromCourse(courseId);
+            const status = await dao.deleteCourse(courseId);
+            res.send(status);
+        } catch (err) {
+            console.error("Error deleting course:", err);
+            res.status(500).json({error: err.message});
+        }
     }
     const updateCourse = async (req, res) => {
-        const {courseId} = req.params;
-        const courseUpdates = req.body;
-        const status = await dao.updateCourse(courseId, courseUpdates);
-        res.send(status);
+        try {
+            const {courseId} = req.params;
+            const currentUser = req.session["currentUser"];
+            if (!currentUser) {
+                res.sendStatus(401);
+                return;
+            }
+            const course = await dao.findCourseById(courseId);
+            if (!course) {
+                res.status(404).json({message: "Course not found"});
+                return;
+            }
+            // Only creator can update
+            if (course.createdBy !== currentUser._id && currentUser.role !== "ADMIN") {
+                res.status(403).json({message: "Only the course creator can edit this course"});
+                return;
+            }
+            const courseUpdates = req.body;
+            const status = await dao.updateCourse(courseId, courseUpdates);
+            res.send(status);
+        } catch (err) {
+            console.error("Error updating course:", err);
+            res.status(500).json({error: err.message});
+        }
     }
     const enrollUserInCourse = async (req, res) => {
         let { uid, cid } = req.params;
@@ -84,5 +142,6 @@ export default function CourseRoutes(app, db) {
     app.delete("/api/courses/:courseId", deleteCourse);
     app.post("/api/users/current/courses", createCourse);
     app.get("/api/users/:userId/courses", findCoursesForEnrolledUser);
+    app.get("/api/users/:userId/courses/created", findCoursesCreatedByUser);
     app.get("/api/courses", findAllCourses);
 }

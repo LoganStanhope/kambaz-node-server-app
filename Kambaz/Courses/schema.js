@@ -7,6 +7,7 @@ const courseSchema = new mongoose.Schema({
         number: String,
         credits: Number,
         description: String,
+        createdBy: String,
         modules: [moduleSchema]
 
     },

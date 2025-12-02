@@ -37,11 +37,15 @@ export default function EnrollmentsDao(db) {
         const enrollments = await model.find({ user: userId }).populate("course");
         return enrollments.map((enrollment) => enrollment.course);
     }
+    async function unenrollAllUsersFromCourse(courseId) {
+        return model.deleteMany({ course: courseId });
+    }
     return {
         findUsersForCourse,
         enrollUserInCourse,
         unenrollUserFromCourse,
         findEnrollmentsByUser,
-        findCoursesForUser
+        findCoursesForUser,
+        unenrollAllUsersFromCourse
     };
 }
