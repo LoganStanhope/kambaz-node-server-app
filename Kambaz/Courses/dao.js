@@ -14,6 +14,14 @@ export default function CoursesDao(db) {
         return enrolledCourses;
     }
 
+    async function findCoursesByCreator(userId) {
+        return model.find({ createdBy: userId });
+    }
+
+    async function findCourseById(courseId) {
+        return model.findById(courseId);
+    }
+
     async function createCourse(course) {
         const newCourse = {...course, _id: uuidv4()};
         return model.create(newCourse);
@@ -29,6 +37,8 @@ export default function CoursesDao(db) {
     return {
         findAllCourses,
         findCoursesForEnrolledUser,
+        findCoursesByCreator,
+        findCourseById,
         createCourse,
         deleteCourse,
         updateCourse
