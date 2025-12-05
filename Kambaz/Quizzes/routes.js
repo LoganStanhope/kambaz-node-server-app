@@ -39,4 +39,27 @@ export default function QuizzesRoutes(app) {
         const status = await dao.deleteQuiz(courseId, quizId);
         res.json(status);
     });
+
+    // Get all questions for a quiz
+    app.get("/api/courses/:courseId/quizzes/:quizId/questions", async (req, res) => {
+        const { courseId, quizId } = req.params;
+        const questions = await dao.findQuestions(courseId, quizId);
+        if (!questions) return res.status(404).json({ error: "Quiz not found" });
+        res.json(questions);
+    });
+
+    // Create a question in a quiz
+    app.post("/api/courses/:courseId/quizzes/:quizId/questions", async (req, res) => {
+        const { courseId, quizId } = req.params;
+        const newQuestion = await dao.createQuestion(courseId, quizId, req.body);
+        res.json(newQuestion);
+    });
+
+    // Update a question in a quiz
+    app.put("/api/courses/:courseId/quizzes/:quizId/questions/:questionId", async (req, res) => {
+        const { courseId, quizId, questionId } = req.params;
+        const updatedQuestion = await dao.updateQuestion(courseId, quizId, questionId, req.body);
+        if (!updatedQuestion) return res.status(404).json({ error: "Question not found" });
+        res.json(updatedQuestion);
+    });
 }
