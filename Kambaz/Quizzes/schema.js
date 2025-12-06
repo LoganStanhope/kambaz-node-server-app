@@ -8,6 +8,7 @@ const ChoiceSchema = new mongoose.Schema({
 
 const QuestionSchema = new mongoose.Schema({
     questionId: String,
+    // MCQ, TFQ, FIBQ
     type: String,
     title: String,
     points: Number,

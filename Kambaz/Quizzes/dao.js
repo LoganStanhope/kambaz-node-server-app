@@ -36,7 +36,7 @@ export default function QuizzesDao() {
         const quiz = await model.findOne({ _id: quizId, course: courseId });
         quiz.questions.push({
             questionId: uuidv4(),
-            type: questionData.type || "mcq",
+            type: questionData.type || "MCQ",
             title: questionData.title || "",
             points: questionData.points || 0,
             questionHtml: questionData.questionHtml || "",
