@@ -168,7 +168,7 @@ export default function QuizzesDao() {
 
         // Check if quiz is published
         if (!quiz.published) {
-            return { canTake: false, reason: "Quiz is not published" };
+            return { canTake: false, reason: "Quiz is not published", attemptsLeft: 0 };
         }
 
         // Check availability dates
@@ -177,25 +177,41 @@ export default function QuizzesDao() {
         const availableUntil = quiz.available_until ? new Date(quiz.available_until) : null;
 
         if (availableDate && now < availableDate) {
-            return { canTake: false, reason: "Quiz is not available yet" };
+            return { canTake: false, reason: "Quiz is not available yet", attemptsLeft: null };
         }
         if (availableUntil && now > availableUntil) {
-            return { canTake: false, reason: "Quiz is no longer available" };
+            return { canTake: false, reason: "Quiz is no longer available", attemptsLeft: 0 };
         }
 
-        // Check multiple attempts setting
+        // Check attempt limits
         const attemptCount = await getStudentAttemptCount(courseId, quizId, studentId);
-        if (quiz.multipleAttempts === 'No') {
-            if (attemptCount > 0) {
-                return { canTake: false, reason: "Multiple attempts not allowed" };
+
+        let attemptsLeft = null;
+
+        if (quiz.multipleAttempts === "No") {
+            attemptsLeft = attemptCount > 0 ? 0 : 1;
+            if (attemptCount >= 1) {
+                return {
+                    canTake: false,
+                    reason: "Multiple attempts not allowed",
+                    attemptsLeft
+                };
             }
-        } else if (quiz.multipleAttempts === 'Yes' && quiz.howManyAttempts) {
-            if (attemptCount >= quiz.howManyAttempts) {
-                return { canTake: false, reason: "Maximum attempts reached" };
+        } else if (quiz.multipleAttempts === "Yes" && quiz.howManyAttempts) {
+            attemptsLeft = Math.max(0, quiz.howManyAttempts - attemptCount);
+            if (attemptsLeft <= 0) {
+                return {
+                    canTake: false,
+                    reason: "Maximum attempts reached",
+                    attemptsLeft: 0
+                };
             }
+        } else {
+            // unlimited attempts
+            attemptsLeft = null;
         }
 
-        return { canTake: true };
+        return { canTake: true, attemptsLeft };
     }
 
     return { 

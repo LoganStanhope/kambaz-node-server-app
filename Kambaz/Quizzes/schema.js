@@ -57,6 +57,7 @@ const schema = new mongoose.Schema(
         num_questions: { type: Number, default: 0 },
         questions: [QuestionSchema],
 
+        student_attempts: { type: [StudentAttemptSchema], default: [] },
         student_scores: { type: Object, default: {} },
         published: { type: Boolean, default: false },
     },
