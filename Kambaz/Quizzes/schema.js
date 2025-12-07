@@ -13,8 +13,8 @@ const QuestionSchema = new mongoose.Schema({
     title: String,
     points: Number,
     questionHtml: String,
-    choices: [ChoiceSchema],    
-    correctAnswer: mongoose.Schema.Types.Mixed 
+    choices: [ChoiceSchema],
+    correctAnswer: mongoose.Schema.Types.Mixed
 });
 
 const StudentAttemptSchema = new mongoose.Schema({
@@ -28,29 +28,39 @@ const StudentAttemptSchema = new mongoose.Schema({
 
 const schema = new mongoose.Schema(
     {
-    _id: String,
-    course: String,
-    name: String,
-    published: Boolean,
-    available_date: String,
-    available_until: String,
-    due_date: String,
-    points: Number,
-    num_questions: Number,
-    questions: [QuestionSchema],
-    student_scores: Object,
-    student_attempts: [StudentAttemptSchema], // Array of attempts per student
-    description: String, // Quiz description (supports HTML)
-    multipleAttempts: String, // "Yes" or "No"
-    howManyAttempts: Number, // Number of attempts allowed if multipleAttempts is "Yes"
-    quizType: String,
-    assignmentGroup: String,
-    shuffleAnswers: String,
-    timeLimit: Number,
-    showCorrectAnswers: String,
-    accessCode: String,
-    oneQuestionAtATime: String,
-    webcamRequired: String,
-    lockQuestionsAfterAnswering: String
-}, { collection: "quizzes" });
+        _id: String,
+        course: { type: String, required: true },
+
+        name: { type: String, required: true },
+        description: { type: String, default: "" },
+
+        quizType: { type: String, default: "Graded Quiz" },
+        assignmentGroup: { type: String, default: "Quizzes" },
+
+        shuffleAnswers: { type: String, default: "Yes" },
+        timeLimit: { type: Number, default: 20 },
+        multipleAttempts: { type: String, default: "No" },
+        howManyAttempts: { type: Number, default: 1 },
+
+        showCorrectAnswers: { type: String, default: "No" },
+        accessCode: { type: String, default: "" },
+
+        oneQuestionAtATime: { type: String, default: "Yes" },
+        webcamRequired: { type: String, default: "No" },
+        lockQuestionsAfterAnswering: { type: String, default: "No" },
+
+        available_date: { type: String, default: "" },
+        available_until: { type: String, default: "" },
+        due_date: { type: String, default: "" },
+
+        points: { type: Number, default: 0 },
+        num_questions: { type: Number, default: 0 },
+        questions: [QuestionSchema],
+
+        student_attempts: { type: [StudentAttemptSchema], default: [] },
+        student_scores: { type: Object, default: {} },
+        published: { type: Boolean, default: false },
+    },
+    { collection: "quizzes" }
+);
 export default schema;
